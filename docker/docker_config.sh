@@ -4,3 +4,5 @@ export DOCKER_REPOSITORY="starcraft"
 
 export DOCKER_TAG_RABBITMQ_BROKER="rabbitmq-broker"
 export DOCKER_TAG_RABBITMQ_WORKER="rabbitmq-worker"
+
+export DOCKER_TAG_REPLAY_PARSER="replay-parser"

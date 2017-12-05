@@ -7,6 +7,7 @@ source ${PROJECT_PATH}/docker/docker_config.sh
 
 # List of images to build by default
 declare -a DOCKER_BUILDS=(${DOCKER_TAG_RABBITMQ_BROKER} \
+                          ${DOCKER_TAG_REPLAY_PARSER} \
                           )
 
 # You can specify your own list
