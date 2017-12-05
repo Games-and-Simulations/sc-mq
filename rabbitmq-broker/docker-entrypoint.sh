@@ -6,7 +6,7 @@ set -euxm
 
 RABBITMQ_CALL() {
     ./rabbitmqadmin \
-        -H ${RABBITMQ_BROKER_LOCAL_IP} \
+        -H ${RABBITMQ_BROKER_HOST} \
         -u ${RABBITMQ_DEFAULT_USER} \
         -p ${RABBITMQ_DEFAULT_PASS} \
         "$@"
