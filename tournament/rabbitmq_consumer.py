@@ -1,12 +1,10 @@
-import json
 import logging
-from json import JSONDecodeError
-from typing import Dict, Sequence, Callable, Any
+from typing import Sequence, Callable, Any
 
 import pika
+from pika import ConnectionParameters
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic, BasicProperties
-
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +27,7 @@ class ExampleConsumer(object):
     QUEUE = 'text'
     ROUTING_KEY = 'example.text'
 
-    def __init__(self, amqp_url):
+    def __init__(self, connection_params: ConnectionParameters):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
 
@@ -40,7 +38,7 @@ class ExampleConsumer(object):
         self._channel = None
         self._closing = False
         self._consumer_tag = None
-        self._url = amqp_url
+        self._connection_params = connection_params
 
     def connect(self):
         """This method connects to RabbitMQ, returning the connection handle.
@@ -50,9 +48,9 @@ class ExampleConsumer(object):
         :rtype: pika.SelectConnection
 
         """
-        logger.info('Connecting to %s', self._url)
-        return pika.SelectConnection(pika.URLParameters(self._url),
-                                     self.on_connection_open,
+        logger.info('Connecting to %s', self._connection_params.host)
+        return pika.SelectConnection(self._connection_params,
+                                     on_open_callback=self.on_connection_open,
                                      stop_ioloop_on_close=False)
 
     def on_connection_open(self, unused_connection):

@@ -4,6 +4,8 @@ from argparse import Namespace
 from copy import copy
 from multiprocessing import Process
 
+from pika import ConnectionParameters
+from pika.credentials import PlainCredentials
 from scbw import DockerException, GameException, run_game, GameArgs
 
 from .message import PlayMessage
@@ -47,13 +49,16 @@ class PlayConsumer(AckConsumer):
     ROUTING_KEY = 'play'
 
     def __init__(self, config: ConsumerConfig):
-        url = f'amqp://' \
-              f'{config.user}:{config.password}@' \
-              f'{config.host}:{config.port}' \
-              f'/%2F' \
-              f'?heartbeat_interval={config.timeout+20}'
-        # set the heartbeat slightly above container timeout
-        super(PlayConsumer, self).__init__(url)
+        super(PlayConsumer, self).__init__(ConnectionParameters(
+            host=config.host,
+            port=config.port,
+            credentials=PlainCredentials(config.user, config.password),
+
+            connection_attempts=3,
+
+            # set the heartbeat slightly above container timeout
+            heartbeat_interval=0,
+        ))
 
         self.result_dir = config.result_dir
 
@@ -69,7 +74,7 @@ class PlayConsumer(AckConsumer):
         self.game_args.read_overwrite = config.read_overwrite
         self.game_args.docker_image = config.docker_image
 
-        self.game_args.opt = config.opt + (" " if config.opt else "") + "--rm"
+        self.game_args.opt = config.opt
 
         self.game_args.human = False
         self.game_args.headless = True

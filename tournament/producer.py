@@ -62,6 +62,7 @@ def launch_producer(args: ProducerConfig):
                     msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
                     n += 1
                     channel.basic_publish(exchange='', routing_key='play', body=msg)
+        logger.info(f"published {n} messages")
 
     finally:
         connection.close()
