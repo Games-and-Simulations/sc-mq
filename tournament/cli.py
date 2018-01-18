@@ -40,7 +40,7 @@ consumer_parser.add_argument("--game_type", type=str, metavar="GAME_TYPE",
 consumer_parser.add_argument("--game_speed", type=int, default=0,
                              help="Set game speed (pause of ms between frames),\n"
                                   "use -1 for game default.")
-consumer_parser.add_argument("--timeout", type=int, default=None,
+consumer_parser.add_argument("--timeout", type=int, default=600,
                              help="Kill docker container after timeout seconds.\n"
                                   "If not set, run without timeout.")
 

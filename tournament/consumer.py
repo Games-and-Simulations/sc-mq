@@ -47,7 +47,12 @@ class PlayConsumer(AckConsumer):
     ROUTING_KEY = 'play'
 
     def __init__(self, config: ConsumerConfig):
-        url = f'amqp://{config.user}:{config.password}@{config.host}:{config.port}/%2F'
+        url = f'amqp://' \
+              f'{config.user}:{config.password}@' \
+              f'{config.host}:{config.port}' \
+              f'/%2F' \
+              f'?heartbeat_interval={config.timeout+20}'
+        # set the heartbeat slightly above container timeout
         super(PlayConsumer, self).__init__(url)
 
         self.result_dir = config.result_dir
@@ -112,7 +117,7 @@ def launch_consumer(args: ConsumerConfig):
         try:
             consumer.run()
         except KeyboardInterrupt:
-            logger.info("Shutting down worker")
+            logger.warning("Shutting down worker")
             consumer.stop()
 
     for i in range(args.n_processes):
