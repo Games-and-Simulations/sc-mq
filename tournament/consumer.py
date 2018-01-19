@@ -57,7 +57,7 @@ class PlayConsumer(AckConsumer):
             connection_attempts=3,
 
             # set the heartbeat slightly above container timeout
-            heartbeat_interval=0,
+            heartbeat_interval=20,
         ))
 
         self.result_dir = config.result_dir
@@ -91,7 +91,7 @@ class PlayConsumer(AckConsumer):
         game_args.map = play.map
         game_args.game_name = play.game_name
 
-        game_result = run_game(game_args)
+        game_result = run_game(game_args, wait_callback=self.wait_callback)
 
         info = dict(
             bots=game_args.bots,
@@ -112,6 +112,9 @@ class PlayConsumer(AckConsumer):
 
         logger.info(f"game {game_args.game_name} finished")
 
+    def wait_callback(self):
+        self._connection.process_data_events()
+
 
 def launch_consumer(args: ConsumerConfig):
     def run() -> None:
@@ -120,10 +123,13 @@ def launch_consumer(args: ConsumerConfig):
         # setup services
         consumer = PlayConsumer(args)
         try:
-            consumer.run()
+            consumer.connect()
+            consumer.start_consuming()
         except KeyboardInterrupt:
             logger.warning("Shutting down worker")
-            consumer.stop()
+            consumer.stop_consuming()
+        finally:
+            consumer.close()
 
     for i in range(args.n_processes):
         p = Process(target=run)

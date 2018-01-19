@@ -1,0 +1,83 @@
+{
+  "users": [
+    {
+      "name": "starcraft",
+      "password_hash": "QxApb+gWvXrvy/OmAxu/slEpkQwiQ7STFxN8myYoDh8G1fEs",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "starcraft",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "play",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "play.dead",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "play.dead",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "play",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "play.dead",
+        "x-dead-letter-routing-key": "play"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "play.dead",
+      "vhost": "/",
+      "destination": "play.dead",
+      "destination_type": "queue",
+      "routing_key": "play.dead",
+      "arguments": {}
+    },
+    {
+      "source": "play",
+      "vhost": "/",
+      "destination": "play",
+      "destination_type": "queue",
+      "routing_key": "play",
+      "arguments": {}
+    }
+  ],
+  "parameters": [],
+  "policies": []
+}
