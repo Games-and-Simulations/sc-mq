@@ -19,10 +19,10 @@ consumer_parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter)
 
 # Rabbit connection
-consumer_parser.add_argument('--host', type=str, help="RabbitMQ host")
-consumer_parser.add_argument('--port', type=int, help="RabbitMQ port")
-consumer_parser.add_argument('--user', type=str, help="RabbitMQ user")
-consumer_parser.add_argument('--password', type=str, help="RabbitMQ password")
+consumer_parser.add_argument('--host', type=str, help="RabbitMQ host", default="localhost")
+consumer_parser.add_argument('--port', type=int, help="RabbitMQ port", default=5672)
+consumer_parser.add_argument('--user', type=str, help="RabbitMQ user", default="starcraft")
+consumer_parser.add_argument('--password', type=str, help="RabbitMQ password", default="starcraft")
 
 # Parallelization
 consumer_parser.add_argument('--n_processes', type=int, default=4)
