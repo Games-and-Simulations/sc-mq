@@ -1,2 +1,2 @@
-include tournament/BOTS_SSCAIT_2017
-include tournament/SSCAIT_MAPS
+include scbw_mq/tournament/benchmarks/BOTS_SSCAIT_2017
+include scbw_mq/tournament/benchmarks/SSCAIT_MAPS

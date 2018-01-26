@@ -96,9 +96,9 @@ producer_parser.add_argument('--password', type=str, required=True, help="Rabbit
 
 # Input data
 here = dirname(abspath(__file__))
-producer_parser.add_argument('--bot_file', type=str, default=f"{here}/BOTS_SSCAIT_2017",
+producer_parser.add_argument('--bot_file', type=str, default=f"{here}/benchmarks/BOTS_SSCAIT_2017",
                              help="File with newline separated list of bots")
-producer_parser.add_argument('--map_file', type=str, default=f"{here}/SSCAIT_MAPS",
+producer_parser.add_argument('--map_file', type=str, default=f"{here}/benchmarks/SSCAIT_MAPS",
                              help="File with newline separated list of maps")
 producer_parser.add_argument('--bot_dir', type=str, default=SC_BOT_DIR,
                              help=f"Directory where bots are stored, default:\n{SC_BOT_DIR}")

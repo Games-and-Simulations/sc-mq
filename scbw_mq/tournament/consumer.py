@@ -9,8 +9,8 @@ from pika.credentials import PlainCredentials
 from scbw import DockerException, GameException, run_game, GameArgs
 
 from .message import PlayMessage
-from .rabbitmq_consumer import AckConsumer
-from .rabbitmq_consumer import consumer_error
+from ..rabbitmq_consumer import AckConsumer
+from ..rabbitmq_consumer import consumer_error
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +55,6 @@ class PlayConsumer(AckConsumer):
             credentials=PlainCredentials(config.user, config.password),
 
             connection_attempts=3,
-
-            # set the heartbeat slightly above container timeout
             heartbeat_interval=20,
         ))
 

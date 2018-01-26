@@ -10,7 +10,7 @@ from scbw.bot_storage import LocalBotStorage, SscaitBotStorage
 from scbw.map import download_sscait_maps, check_map_exists
 
 from .message import PlayMessage
-from .utils import read_lines
+from ..utils import read_lines
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +60,16 @@ def launch_producer(args: ProducerConfig):
                     game_name = "".join(choice("0123456789ABCDEF") for _ in range(8)) + "_%06d" % n
 
                     msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
+
+                    if bot_a == "NUS Bot" or bot_a == "Gaoyuan Chen" \
+                            or bot_b == "NUS Bot" or bot_b == "Gaoyuan Chen":
+                        pass
+                    else:
+                        if n in [1972, 5217, 6751, 9264, 10844, 12227, 17625]:
+                            print("%06d" % n, bot_a, bot_b, map_name)
+                            channel.basic_publish(exchange='', routing_key='play', body=msg)
+
                     n += 1
-                    channel.basic_publish(exchange='', routing_key='play', body=msg)
         logger.info(f"published {n} messages")
 
     finally:

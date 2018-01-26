@@ -5,7 +5,7 @@ Starcraft BW docker launcher.
 # Always prefer setuptools over distutils
 from setuptools import setup
 
-from tournament import VERSION
+from scbw_mq import VERSION
 
 setup(
     name='scbw_mq',
@@ -42,11 +42,14 @@ setup(
                       'scbw'],
     extras_require={
     },
-    packages=['tournament'],
+    packages=['scbw_mq'],
     entry_points={  # Optional
         'console_scripts': [
-            'scbw.tournament.consume=tournament.cli:consumer',
-            'scbw.tournament.produce=tournament.cli:producer',
+            'scbw.tournament.consume=scbw_mq.tournament.cli:consumer',
+            'scbw.tournament.produce=scbw_mq.tournament.cli:producer',
+            'scbw.parser.produce=scbw_mq.parser.cli:producer',
+            'scbw.parser.consume=scbw_mq.parser.cli:consumer',
+
         ],
     },
     python_requires='>=3.6',

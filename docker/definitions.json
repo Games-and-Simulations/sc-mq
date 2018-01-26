@@ -39,6 +39,24 @@
       "auto_delete": false,
       "internal": false,
       "arguments": {}
+    },
+    {
+      "name": "parse",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "parse.dead",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
     }
   ],
   "queues": [
@@ -58,6 +76,23 @@
         "x-dead-letter-exchange": "play.dead",
         "x-dead-letter-routing-key": "play"
       }
+    },
+    {
+      "name": "parse.dead",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "parse",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "parse.dead",
+        "x-dead-letter-routing-key": "parse"
+      }
     }
   ],
   "bindings": [
@@ -75,6 +110,22 @@
       "destination": "play",
       "destination_type": "queue",
       "routing_key": "play.play",
+      "arguments": {}
+    },
+    {
+      "source": "parse.dead",
+      "vhost": "/",
+      "destination": "parse.dead",
+      "destination_type": "queue",
+      "routing_key": "parse",
+      "arguments": {}
+    },
+    {
+      "source": "parse",
+      "vhost": "/",
+      "destination": "parse",
+      "destination_type": "queue",
+      "routing_key": "parse.parse",
       "arguments": {}
     }
   ],
