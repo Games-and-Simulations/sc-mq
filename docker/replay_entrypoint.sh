@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -x
 
 REPLAY_FILE=$1
 PARSER_TIMEOUT=$2

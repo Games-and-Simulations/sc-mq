@@ -49,7 +49,9 @@ STORAGE_DIR = f"{APP_DIR}/storage"
 
 
 def parse_replay(replay_file: str, config: ConsumerConfig, wait_callback: Callable) -> int:
-    cmd = ["docker", "run", "-d", "--privileged", "--rm",
+    cmd = ["docker", "run",
+           "--privileged",
+           "--rm",
            "--name", f"PARSE_{replay_file}",
            "--volume", f"{xoscmounts(config.parser_dir)}:{PARSER_DIR}:ro",
            "--volume", f"{xoscmounts(config.storage_dir)}:{STORAGE_DIR}:rw",
