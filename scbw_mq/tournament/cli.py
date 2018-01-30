@@ -14,15 +14,21 @@ logger = logging.getLogger(__name__)
 
 SC_RESULT_DIR = f"{SCBW_BASE_DIR}/results"
 
+RABBITMQ_HOST = "localhost"
+RABBITMQ_PORT = 5672
+RABBITMQ_USER = "starcraft"
+RABBITMQ_PASSWORD = "starcraft"
+
 consumer_parser = argparse.ArgumentParser(
     description='Launch tournament client that uses RabbitMQ specification to launch a game',
     formatter_class=argparse.RawTextHelpFormatter)
 
 # Rabbit connection
-consumer_parser.add_argument('--host', type=str, help="RabbitMQ host", default="localhost")
-consumer_parser.add_argument('--port', type=int, help="RabbitMQ port", default=5672)
-consumer_parser.add_argument('--user', type=str, help="RabbitMQ user", default="starcraft")
-consumer_parser.add_argument('--password', type=str, help="RabbitMQ password", default="starcraft")
+consumer_parser.add_argument('--host', type=str, help="RabbitMQ host", default=RABBITMQ_HOST)
+consumer_parser.add_argument('--port', type=int, help="RabbitMQ port", default=RABBITMQ_PORT)
+consumer_parser.add_argument('--user', type=str, help="RabbitMQ user", default=RABBITMQ_USER)
+consumer_parser.add_argument('--password', type=str, help="RabbitMQ password",
+                             default=RABBITMQ_PASSWORD)
 
 # Parallelization
 consumer_parser.add_argument('--n_processes', type=int, default=4)
@@ -89,10 +95,11 @@ producer_parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter)
 
 # Rabbit connection
-producer_parser.add_argument('--host', type=str, required=True, help="RabbitMQ host")
-producer_parser.add_argument('--port', type=int, required=True, help="RabbitMQ port")
-producer_parser.add_argument('--user', type=str, required=True, help="RabbitMQ user")
-producer_parser.add_argument('--password', type=str, required=True, help="RabbitMQ password")
+producer_parser.add_argument('--host', type=str, help="RabbitMQ host", default=RABBITMQ_HOST)
+producer_parser.add_argument('--port', type=int, help="RabbitMQ port", default=RABBITMQ_PORT)
+producer_parser.add_argument('--user', type=str, help="RabbitMQ user", default=RABBITMQ_USER)
+producer_parser.add_argument('--password', type=str, help="RabbitMQ password",
+                             default=RABBITMQ_PASSWORD)
 
 # Input data
 here = dirname(abspath(__file__))
@@ -100,6 +107,11 @@ producer_parser.add_argument('--bot_file', type=str, default=f"{here}/benchmarks
                              help="File with newline separated list of bots")
 producer_parser.add_argument('--map_file', type=str, default=f"{here}/benchmarks/SSCAIT_MAPS",
                              help="File with newline separated list of maps")
+producer_parser.add_argument('--test_bot', type=str, default=None,
+                             help="Instead of playing tournament (each bot vs each bot),\n"
+                                  "play one specified bot against all others.")
+producer_parser.add_argument('--repeat_games', type=int, default=10,
+                             help="Number of times each game setting will be repeated")
 producer_parser.add_argument('--bot_dir', type=str, default=SC_BOT_DIR,
                              help=f"Directory where bots are stored, default:\n{SC_BOT_DIR}")
 producer_parser.add_argument('--map_dir', type=str, default=SC_MAP_DIR,
@@ -116,4 +128,5 @@ producer_parser.add_argument('--log_level', type=str, default="INFO",
 def producer():
     args = producer_parser.parse_args()
     coloredlogs.install(level=args.log_level, fmt="%(levelname)s %(name)s[%(process)d] %(message)s")
-    launch_producer(args)
+    n = launch_producer(args)
+    logger.info(f"published {n} messages")

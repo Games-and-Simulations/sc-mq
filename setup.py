@@ -42,7 +42,9 @@ setup(
                       'scbw'],
     extras_require={
     },
-    packages=['scbw_mq'],
+    packages=['scbw_mq',
+              'scbw_mq.parser',
+              'scbw_mq.tournament'],
     entry_points={  # Optional
         'console_scripts': [
             'scbw.tournament.consume=scbw_mq.tournament.cli:consumer',

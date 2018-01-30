@@ -1,10 +1,12 @@
 import logging
+import os
 from argparse import Namespace
 from random import choice
+from typing import Iterable
 
-import os
 import pika
 from pika import PlainCredentials
+from pika.adapters.blocking_connection import BlockingChannel
 from scbw.bot_factory import retrieve_bots
 from scbw.bot_storage import LocalBotStorage, SscaitBotStorage
 from scbw.map import download_sscait_maps, check_map_exists
@@ -24,14 +26,51 @@ class ProducerConfig(Namespace):
 
     bot_file: str
     map_file: str
+    test_bot: str
+    repeat_games: int
+
     bot_dir: str
     map_dir: str
     result_dir: str
 
 
-def launch_producer(args: ProducerConfig):
+def publish_all_vs_all(channel: BlockingChannel, repeat_games: int,
+                       bots: Iterable[str], maps: Iterable[str]) -> int:
+    n = 0
+    for _ in range(repeat_games):
+        for i, bot_a in enumerate(bots):
+            for bot_b in bots[(i + 1):]:
+                for map_name in maps:
+                    game_name = "".join(choice("0123456789ABCDEF")
+                                        for _ in range(8)) + "_%06d" % n
+                    msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
+                    channel.basic_publish(exchange='', routing_key='play', body=msg)
+
+                    n += 1
+    logger.info(f"published {n} messages")
+
+
+def publish_one_vs_all(channel: BlockingChannel, one_bot: str,
+                       repeat_games: int, bots: Iterable[str], maps: Iterable[str]) -> int:
+    n = 0
+    for _ in range(repeat_games):
+        for other_bot in bots:
+            for map_name in maps:
+                game_name = "".join(choice("0123456789ABCDEF")
+                                    for _ in range(8)) + "_%06d" % n
+                msg = PlayMessage([one_bot, other_bot], map_name, game_name).serialize()
+                channel.basic_publish(exchange='', routing_key='play', body=msg)
+
+                n += 1
+    return n
+
+
+def launch_producer(args: ProducerConfig) -> int:
     bots = read_lines(args.bot_file)
     maps = read_lines(args.map_file)
+
+    if args.test_bot:
+        bots.append(args.test_bot)
 
     # make sure to download bots and maps before producing messages
     bot_storages = (LocalBotStorage(args.bot_dir), SscaitBotStorage(args.bot_dir))
@@ -52,25 +91,12 @@ def launch_producer(args: ProducerConfig):
     try:
         channel = connection.channel()
 
-        logger.info(f"publishing {len(bots)*(len(bots)-1)/2*len(maps)} messages")
-        n = 0
-        for i, bot_a in enumerate(bots):
-            for bot_b in bots[(i + 1):]:
-                for map_name in maps:
-                    game_name = "".join(choice("0123456789ABCDEF") for _ in range(8)) + "_%06d" % n
+        if args.test_bot is not None:
+            n = publish_one_vs_all(channel, args.test_bot, args.repeat_games, bots, maps)
+        else:
+            n = publish_all_vs_all(channel, args.repeat_games, bots, maps)
 
-                    msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
-
-                    if bot_a == "NUS Bot" or bot_a == "Gaoyuan Chen" \
-                            or bot_b == "NUS Bot" or bot_b == "Gaoyuan Chen":
-                        pass
-                    else:
-                        if n in [1972, 5217, 6751, 9264, 10844, 12227, 17625]:
-                            print("%06d" % n, bot_a, bot_b, map_name)
-                            channel.basic_publish(exchange='', routing_key='play', body=msg)
-
-                    n += 1
-        logger.info(f"published {n} messages")
+        return n
 
     finally:
         connection.close()

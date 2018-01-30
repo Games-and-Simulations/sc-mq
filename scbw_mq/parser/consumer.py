@@ -69,8 +69,8 @@ def parse_replay(replay_file: str, config: ConsumerConfig, wait_callback: Callab
         ret_code = p.poll()
         wait_callback()
         if ret_code is not None:
-            if ret_code == 1:
-                raise ParseException("error exit code")
+            if ret_code != 0:
+                raise ParseException(f"exit code is not 0 but {ret_code}")
             break
         time.sleep(3)
 
