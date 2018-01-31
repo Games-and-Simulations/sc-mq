@@ -7,6 +7,7 @@ from scbw.cli import SC_BOT_DIR, SC_LOG_DIR, SC_MAP_DIR, SC_BWAPI_DATA_BWTA_DIR,
     SC_BWAPI_DATA_BWTA2_DIR, SC_IMAGE, SCBW_BASE_DIR
 from scbw.game_type import GameType
 
+from .bot_benchmark import launch_bot_benchmark
 from .consumer import launch_consumer
 from .producer import launch_producer
 
@@ -130,3 +131,9 @@ def producer():
     coloredlogs.install(level=args.log_level, fmt="%(levelname)s %(name)s[%(process)d] %(message)s")
     n = launch_producer(args)
     logger.info(f"published {n} messages")
+
+
+def bot_benchmark():
+    args = producer_parser.parse_args()
+    coloredlogs.install(level=args.log_level, fmt="%(levelname)s %(name)s[%(process)d] %(message)s")
+    launch_bot_benchmark(args)

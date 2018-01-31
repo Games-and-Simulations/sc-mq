@@ -80,6 +80,10 @@ def launch_producer(args: ProducerConfig) -> int:
         check_map_exists(args.map_dir + "/" + map)
     os.makedirs(args.result_dir, exist_ok=True)
 
+    if len(os.listdir(args.result_dir)) != 0:
+        raise Exception(f"Result dir '{args.result_dir}' is not empty!"
+                        "Please empty the dir or use different result dir as destination.")
+
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host=args.host,
         port=args.port,

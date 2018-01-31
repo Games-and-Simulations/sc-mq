@@ -49,6 +49,7 @@ setup(
         'console_scripts': [
             'scbw.tournament.consume=scbw_mq.tournament.cli:consumer',
             'scbw.tournament.produce=scbw_mq.tournament.cli:producer',
+            'scbw.tournament.benchmark=scbw_mq.tournament.cli:bot_benchmark',
             'scbw.parser.produce=scbw_mq.parser.cli:producer',
             'scbw.parser.consume=scbw_mq.parser.cli:consumer',
 
