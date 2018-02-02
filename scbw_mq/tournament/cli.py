@@ -7,13 +7,14 @@ from scbw.cli import SC_BOT_DIR, SC_LOG_DIR, SC_MAP_DIR, SC_BWAPI_DATA_BWTA_DIR,
     SC_BWAPI_DATA_BWTA2_DIR, SC_IMAGE, SCBW_BASE_DIR
 from scbw.game_type import GameType
 
-from .bot_benchmark import launch_bot_benchmark
+from .benchmark import launch_benchmark
 from .consumer import launch_consumer
 from .producer import launch_producer
 
 logger = logging.getLogger(__name__)
 
 SC_RESULT_DIR = f"{SCBW_BASE_DIR}/results"
+SC_BENCHMARKS_DIR = f"{SCBW_BASE_DIR}/benchmarks"
 
 RABBITMQ_HOST = "localhost"
 RABBITMQ_PORT = 5672
@@ -133,7 +134,27 @@ def producer():
     logger.info(f"published {n} messages")
 
 
-def bot_benchmark():
-    args = producer_parser.parse_args()
+benchmark_parser = argparse.ArgumentParser(
+    description='Launch tournament client that uses RabbitMQ specification to launch a game',
+    formatter_class=argparse.RawTextHelpFormatter)
+
+# Rabbit connection
+benchmark_parser.add_argument('--host', type=str, help="RabbitMQ host", default=RABBITMQ_HOST)
+benchmark_parser.add_argument('--port', type=int, help="RabbitMQ port", default=RABBITMQ_PORT)
+benchmark_parser.add_argument('--user', type=str, help="RabbitMQ user", default=RABBITMQ_USER)
+benchmark_parser.add_argument('--password', type=str, help="RabbitMQ password",
+                              default=RABBITMQ_PASSWORD)
+
+benchmark_parser.add_argument('--benchmark', type=str, required=True)
+benchmark_parser.add_argument('--base_dir', type=str, default=SC_BENCHMARKS_DIR)
+benchmark_parser.add_argument('--test_bot_dir', type=str, default=None)
+
+benchmark_parser.add_argument('--log_level', type=str, default="INFO",
+                              choices=['DEBUG', 'INFO', 'WARN', 'ERROR'],
+                              help="Logging level.")
+
+
+def benchmark():
+    args = benchmark_parser.parse_args()
     coloredlogs.install(level=args.log_level, fmt="%(levelname)s %(name)s[%(process)d] %(message)s")
-    launch_bot_benchmark(args)
+    launch_benchmark(args)

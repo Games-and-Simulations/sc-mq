@@ -2,7 +2,7 @@ import logging
 import os
 from argparse import Namespace
 from random import choice
-from typing import Iterable
+from typing import Iterable, Optional
 
 import pika
 from pika import PlainCredentials
@@ -26,7 +26,7 @@ class ProducerConfig(Namespace):
 
     bot_file: str
     map_file: str
-    test_bot: str
+    test_bot: Optional[str]
     repeat_games: int
 
     bot_dir: str
@@ -44,7 +44,7 @@ def publish_all_vs_all(channel: BlockingChannel, repeat_games: int,
                     game_name = "".join(choice("0123456789ABCDEF")
                                         for _ in range(8)) + "_%06d" % n
                     msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
-                    channel.basic_publish(exchange='', routing_key='play', body=msg)
+                    publish_msg(channel, msg)
 
                     n += 1
     logger.info(f"published {n} messages")
@@ -59,10 +59,20 @@ def publish_one_vs_all(channel: BlockingChannel, one_bot: str,
                 game_name = "".join(choice("0123456789ABCDEF")
                                     for _ in range(8)) + "_%06d" % n
                 msg = PlayMessage([one_bot, other_bot], map_name, game_name).serialize()
-                channel.basic_publish(exchange='', routing_key='play', body=msg)
+                publish_msg(channel, msg)
 
                 n += 1
     return n
+
+
+def publish_msg(channel, msg):
+    channel.basic_publish(
+        exchange='',
+        routing_key='play',
+        body=msg,
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make message persistent
+        ))
 
 
 def launch_producer(args: ProducerConfig) -> int:
