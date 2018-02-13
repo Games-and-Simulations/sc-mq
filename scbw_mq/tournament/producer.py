@@ -47,7 +47,7 @@ def publish_all_vs_all(channel: BlockingChannel, repeat_games: int,
                     publish_msg(channel, msg)
 
                     n += 1
-    logger.info(f"published {n} messages")
+    return n
 
 
 def publish_one_vs_all(channel: BlockingChannel, one_bot: str,
@@ -82,9 +82,8 @@ def launch_producer(args: ProducerConfig) -> int:
     if args.test_bot:
         bots.append(args.test_bot)
 
-    # make sure to download bots and maps before producing messages
+    # make sure to bots and maps are available before producing messages
     bot_storages = (LocalBotStorage(args.bot_dir), SscaitBotStorage(args.bot_dir))
-    download_sscait_maps(args.map_dir)
     retrieve_bots(bots, bot_storages)
     for map in maps:
         check_map_exists(args.map_dir + "/" + map)
