@@ -38,12 +38,16 @@ setup(
     install_requires=['pika',
                       'coloredlogs',
                       'tqdm',
-                      'scbw'],
+                      'scbw',
+                      'pandas',
+                      'matplotlib',
+                      "elo"],
     extras_require={
     },
     packages=['scbw_mq',
               'scbw_mq.parser',
-              'scbw_mq.tournament'],
+              'scbw_mq.tournament',
+              'scbw_mq.tournament.benchmark'],
     entry_points={  # Optional
         'console_scripts': [
             'scbw.tournament.consume=scbw_mq.tournament.cli:consumer',
