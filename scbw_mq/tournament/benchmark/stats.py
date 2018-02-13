@@ -2,7 +2,6 @@ import csv
 import glob
 import json
 import logging
-from random import choice
 from typing import Dict, Optional
 
 import elo
@@ -30,6 +29,13 @@ def process_results(result_dir: str) -> DataFrame:
             "loser_race": [],
             "game_time": []}
 
+    race = dict(
+        T="Terran",
+        Z="Zerg",
+        P="Protoss",
+        R="Random"
+    )
+
     for file in tqdm(glob.glob(f"{result_dir}/*.json"), unit="game"):
         if "failed" in file:
             continue
@@ -37,27 +43,12 @@ def process_results(result_dir: str) -> DataFrame:
         with open(file, "r") as f:
             info = json.load(f)
 
-        if info['winner_player'] == 0:
-            winner = info["bots"][0]
-            loser = info["bots"][1]
-            # winner_race = info["races"][0]
-            # loser_race = info["races"][1]
-        else:
-            winner = info["bots"][1]
-            loser = info["bots"][0]
-            # winner_race = info["races"][1]
-            # loser_race = info["races"][0]
-
-        # todo: fix!
-        winner_race = choice(["Terran", "Zerg", "Protoss", "Random"])
-        loser_race = choice(["Terran", "Zerg", "Protoss", "Random"])
-
         rows["game_name"].append(info["game_name"])
         rows["map"].append(info["map"].replace("sscai/", ""))
-        rows["winner"].append(winner)
-        rows["winner_race"].append(winner_race)
-        rows["loser"].append(loser)
-        rows["loser_race"].append(loser_race)
+        rows["winner"].append(info['winner'])
+        rows["winner_race"].append(race[info['winner_race']])
+        rows["loser"].append(info['loser'])
+        rows["loser_race"].append(race[info['loser_race']])
         rows["game_time"].append(info["game_time"])
 
     return DataFrame(rows).set_index("game_name")

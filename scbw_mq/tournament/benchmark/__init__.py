@@ -1,3 +1,4 @@
+import json
 import logging
 import shutil
 import sys
@@ -7,8 +8,8 @@ from os.path import exists, basename, dirname
 from typing import Optional
 
 import pandas as pd
-import pika
-from pika import PlainCredentials
+import requests
+from requests.auth import HTTPBasicAuth
 from scbw.player import check_bot_exists
 from tqdm import tqdm
 
@@ -21,6 +22,8 @@ from ..producer import ProducerConfig
 from ..producer import launch_producer
 
 logger = logging.getLogger(__name__)
+logging.getLogger('requests').setLevel(logging.CRITICAL)
+logging.getLogger('pika').setLevel(logging.CRITICAL)
 
 
 class BenchmarkConfig(Namespace):
@@ -37,45 +40,38 @@ class BenchmarkConfig(Namespace):
     results_only: bool
 
 
-def get_queued_cnt(channel):
-    declare_ok = channel.queue_declare(queue="play", passive=True)
-    return declare_ok.method.message_count
+def get_queued_cnt(args: BenchmarkConfig):
+    response = requests.get(f"http://{args.host}:15672/api/queues/%2F/play",
+                            auth=HTTPBasicAuth(args.user, args.password))
+    state = json.loads(response.text)
+    return state['messages']
 
 
 def wait_until_benchmark_finished(args: BenchmarkConfig):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host=args.host,
-        port=args.port,
-        connection_attempts=5,
-        retry_delay=3,
-        credentials=PlainCredentials(args.user, args.password)
-    ))
+    logger.info("Please wait until all games are finished.")
+    logger.info("Don't forget to launch tournament consumers.")
+    logger.info("This can take several hours, please be patient.")
 
-    try:
-        channel = connection.channel()
+    time.sleep(10)
 
-        logger.info("Please wait until all games are finished.")
-        logger.info("Don't forget to launch tournament consumers.")
-        logger.info("This can take several hours, please be patient.")
+    last_messages = get_queued_cnt(args)
+    bar = tqdm(total=last_messages, unit="game")
 
-        last_messages = get_queued_cnt(channel)
-        bar = tqdm(total=last_messages, unit="game")
-
-        while last_messages != 0:
-            current_messages = get_queued_cnt(channel)
+    while last_messages != 0:
+        current_messages = get_queued_cnt(args)
+        if last_messages != current_messages:
             bar.update(last_messages - current_messages)
             last_messages = current_messages
-            time.sleep(5)
+        time.sleep(5)
 
-        bar.close()
-
-    finally:
-        connection.close()
+    bar.close()
 
 
 def launch_benchmark(args: BenchmarkConfig):
     # you can add custom benchmark storages here
-    benchmark_storages = (LocalBenchmarkStorage(args.base_dir), SscaitBenchmarkStorage(args.base_dir), )
+    benchmark_storages = (
+        LocalBenchmarkStorage(args.base_dir),
+        SscaitBenchmarkStorage(args.base_dir),)
     benchmark = retrieve_benchmark(args.benchmark, benchmark_storages)
 
     test_bot = None

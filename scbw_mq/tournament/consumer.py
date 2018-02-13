@@ -89,45 +89,32 @@ class PlayConsumer(AckConsumer):
         game_args.game_name = play.game_name
 
         info = dict(
-            bots=game_args.bots,
             map=game_args.map,
             game_name=game_args.game_name,
             game_type=game_args.game_type,
-            game_speed=game_args.game_speed,
             timeout=game_args.timeout,
             read_overwrite=game_args.read_overwrite,
         )
 
-        try:
-            game_result = run_game(game_args, wait_callback=self.wait_callback)
+        game_result = run_game(game_args, wait_callback=self.wait_callback)
 
-            info.update(dict(
-                is_finished=True,
-                races=[player.race.value for player in game_result.players],
-                game_time=game_result.game_time,
-                winner_player=game_result.winner_player,
-                replay_files=game_result.replay_files,
-                log_files=game_result.log_files,
-            ))
-            logger.debug(info)
-            with open(f"{self.result_dir}/{play.game_name}.json", "w") as f:
-                json.dump(info, f)
-            logger.info(f"game {game_args.game_name} recorded")
+        info.update(dict(
+            is_crashed=game_result.is_crashed,
+            is_gametime_outed=game_result.is_gametime_outed,
+            is_realtime_outed=game_result.is_realtime_outed,
 
-        except GameException:
+            winner=game_result.winner_player.name,
+            loser=game_result.loser_player.name,
 
-            info.update(dict(
-                is_finished=False,
-                races=None,
-                game_time=None,
-                winner_player=None,
-                replay_files=None,
-                log_files=None,
-            ))
-            logger.debug(info)
-            with open(f"{self.result_dir}/failed_{play.game_name}.json", "w") as f:
-                json.dump(info, f)
-            logger.info(f"failed game {game_args.game_name} recorded")
+            winner_race=game_result.winner_player.race.value,
+            loser_race=game_result.loser_player.race.value,
+
+            game_time=game_result.game_time
+        ))
+        logger.debug(info)
+        with open(f"{self.result_dir}/{play.game_name}.json", "w") as f:
+            json.dump(info, f)
+        logger.info(f"game {game_args.game_name} recorded")
 
     def wait_callback(self):
         self._connection.process_data_events()
