@@ -78,7 +78,6 @@ class PlayConsumer(AckConsumer):
         self.game_args.headless = True
         self.game_args.vnc_base_port = 5900
         self.game_args.show_all = False
-        self.game_args.disable_checks = True
 
     @consumer_error(GameException, DockerException)
     def handle_message(self, json_request: str):
@@ -129,8 +128,6 @@ class PlayConsumer(AckConsumer):
             with open(f"{self.result_dir}/failed_{play.game_name}.json", "w") as f:
                 json.dump(info, f)
             logger.info(f"failed game {game_args.game_name} recorded")
-
-
 
     def wait_callback(self):
         self._connection.process_data_events()
