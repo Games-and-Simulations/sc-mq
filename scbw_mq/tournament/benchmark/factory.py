@@ -13,7 +13,7 @@ def retrieve_benchmark(benchmark_name: str,
             break
 
     if benchmark is None:
-        raise Exception(f"Could not find benchmark {benchmark_name}")
+        raise Exception(f"Could not find benchmark '{benchmark_name}'")
 
     # make sure everything is ok :)
     benchmark.check_structure()

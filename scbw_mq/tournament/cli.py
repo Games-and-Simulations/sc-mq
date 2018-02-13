@@ -149,6 +149,10 @@ benchmark_parser.add_argument('--benchmark', type=str, required=True)
 benchmark_parser.add_argument('--base_dir', type=str, default=SC_BENCHMARKS_DIR)
 benchmark_parser.add_argument('--test_bot_dir', type=str, default=None)
 
+benchmark_parser.add_argument('--results_only', action='store_true',
+                              help="Only process results, do not launch\n"
+                                    "message production and waiting")
+
 benchmark_parser.add_argument('--log_level', type=str, default="INFO",
                               choices=['DEBUG', 'INFO', 'WARN', 'ERROR'],
                               help="Logging level.")

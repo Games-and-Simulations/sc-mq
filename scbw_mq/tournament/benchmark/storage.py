@@ -7,6 +7,7 @@ from typing import Optional
 from scbw.map import check_map_exists
 from scbw.player import check_bot_exists
 from scbw.utils import download_extract_zip
+
 from ...utils import read_lines
 
 logger = logging.getLogger(__name__)
@@ -76,11 +77,22 @@ class BenchmarkStorage:
         return benchmark
 
 
-class SscaitBenchmarkStorage(BenchmarkStorage):
-    BASE_URL = "http://sscaitournament.com/benchmarks"
-
+class LocalBenchmarkStorage(BenchmarkStorage):
     def __init__(self, base_dir: str):
         self.base_dir = base_dir
+
+    def find_benchmark(self, name: str) -> Optional[Benchmark]:
+        if exists(self.benchmark_dir(name)):
+            return self.get_benchmark(self.benchmark_dir(name))
+
+        return None
+
+    def benchmark_dir(self, benchmark_name: str):
+        return f'{self.base_dir}/{benchmark_name}'
+
+
+class SscaitBenchmarkStorage(LocalBenchmarkStorage):
+    BASE_URL = "http://sscaitournament.com/benchmarks"
 
     def find_benchmark(self, name: str) -> Optional[Benchmark]:
         if not name.startswith("SSCAIT"):
@@ -106,9 +118,6 @@ class SscaitBenchmarkStorage(BenchmarkStorage):
             shutil.rmtree(self.benchmark_dir(name))
 
             return None
-
-    def benchmark_dir(self, benchmark_name: str):
-        return f'{self.base_dir}/{benchmark_name}'
 
 # Feel free to include other benchmark sources!
 # But they need to respect benchmark / bot structure :)
