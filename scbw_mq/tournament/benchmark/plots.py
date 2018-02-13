@@ -17,7 +17,7 @@ def plot_rr_overall_winrates(ser_overall_winrate: Series):
     ax = bot_winrates.plot(
         kind="bar",
         figsize=(ser_overall_winrate.shape[0] / 4, 6),
-        title=f"Overall win rate of given bots",
+        title=f"Win rates of tournament bots",
         ylim=(0, 1.1),
         color="#8B96D0"
     )
@@ -90,7 +90,7 @@ def plot_rr_race_counts(ser_races: Series):
     ax = race_counts.plot(
         kind="bar",
         figsize=(5, 3),
-        title=f"Number of bots that use given race",
+        title=f"Number of tournament bots that use given race",
         ylim=(0, race_counts.max()),
         color="#8B96D0"
     )
@@ -120,7 +120,7 @@ def plot_rr_game_times(df_gametimes: DataFrame):
         rot=90,
         grid=True
     )
-    ax.set_title("Real-life time durations of play")
+    ax.set_title("Real-life time durations of play sorted by median times")
     ax.set_xlabel("Bot name")
     ax.set_ylabel("Time [sec]")
     fig = ax.get_figure()
@@ -142,7 +142,7 @@ def plot_rr_maps_winrates(ser_maps: Series):
         ylim=(0, 1.1),
         color="#8B96D0"
     )
-    ax.set_title("Best-scoring bots on each map scenario")
+    ax.set_title("Best-scoring bots on each tournament map scenario")
     ax.set_xlabel("Map name")
     ax.set_ylabel("Win rate")
     for p, bot in zip(ax.patches, best_bot_on_map['bot'].tolist()):
@@ -162,7 +162,7 @@ def plot_bot_overall_winrates(bot: str, ser_overall_winrate: Series):
     ax = bot_winrates.plot(
         kind="bar",
         figsize=(ser_overall_winrate.shape[0] / 4, 6),
-        title=f"Overall win rate of given bots",
+        title=f"Updated win rates after playing '{bot}' with tournament bots",
         ylim=(0, 1.1),
         color="#8B96D0"
     )
@@ -191,7 +191,7 @@ def plot_bot_rr_winrates(bot: str, df_rr_winrate: DataFrame):
     ax = other_winrates.plot(
         kind="bar",
         figsize=(df_rr_winrate.shape[0] / 4, 5),
-        title=f"Win rate of bot '{bot}' against opponents",
+        title=f"Win rate of bot '{bot}' against each opponent",
         ylim=(0, 1.1),
         color="#8B96D0"
     )
@@ -215,7 +215,7 @@ def plot_bot_elos(bot: str, ser_elos: Series):
     ax = ser_elos.plot(
         kind="bar",
         figsize=(len(ser_elos) / 4, 5),
-        title=f"Elo ratings of tournament bots",
+        title=f"Updated elo ratings after playing '{bot}' with tournament bots",
         ylim=(0, ser_elos.max()),
         color="#8B96D0"
     )
@@ -242,7 +242,7 @@ def plot_bot_race_winrates(bot: str, df_botrace_winrate: DataFrame):
     ax = bot_races.plot(
         kind="bar",
         figsize=(5, 3),
-        title=f"Win rate of bot '{bot}' against other races",
+        title=f"Win rate of bot '{bot}' given a race",
         ylim=(0, 1.1),
         color="#8B96D0"
     )
