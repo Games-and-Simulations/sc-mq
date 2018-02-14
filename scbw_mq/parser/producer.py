@@ -40,7 +40,13 @@ def launch_producer(args: ProducerConfig):
 
         logger.info(f"publishing {len(replays)} messages")
         for replay in replays:
-            channel.basic_publish(exchange='', routing_key='parse', body=replay)
+            channel.basic_publish(
+                exchange='',
+                routing_key='parse',
+                body=replay,
+                properties=pika.BasicProperties(
+                    delivery_mode=2,  # make message persistent
+                ))
 
     finally:
         connection.close()
