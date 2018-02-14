@@ -102,15 +102,21 @@ class PlayConsumer(AckConsumer):
             is_crashed=game_result.is_crashed,
             is_gametime_outed=game_result.is_gametime_outed,
             is_realtime_outed=game_result.is_realtime_outed,
+            game_time=game_result.game_time,
 
-            winner=game_result.winner_player.name,
-            loser=game_result.loser_player.name,
-
-            winner_race=game_result.winner_player.race.value,
-            loser_race=game_result.loser_player.race.value,
-
-            game_time=game_result.game_time
+            winner=None,
+            loser=None,
+            winner_race=None,
+            loser_race=None,
         ))
+
+        if game_result.is_valid:
+            info.update(dict(
+                winner=game_result.winner_player.name,
+                loser=game_result.loser_player.name,
+                winner_race=game_result.winner_player.race.value,
+                loser_race=game_result.loser_player.race.value,
+            ))
         logger.debug(info)
         with open(f"{self.result_dir}/{play.game_name}.json", "w") as f:
             json.dump(info, f)
