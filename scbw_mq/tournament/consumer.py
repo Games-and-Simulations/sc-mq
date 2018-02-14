@@ -94,6 +94,7 @@ class PlayConsumer(AckConsumer):
             game_type=game_args.game_type,
             timeout=game_args.timeout,
             read_overwrite=game_args.read_overwrite,
+            bots=play.bots
         )
 
         game_result = run_game(game_args, wait_callback=self.wait_callback)
