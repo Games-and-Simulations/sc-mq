@@ -64,6 +64,7 @@ class AckConsumer(ExampleConsumer):
             except ConnectionClosed:
                 # try to reconnect
                 self.reconnect()
+                channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
 
         def accept():
             try:
@@ -71,6 +72,7 @@ class AckConsumer(ExampleConsumer):
             except ConnectionClosed:
                 # try to reconnect
                 self.reconnect()
+                channel.basic_ack(delivery_tag=method.delivery_tag)
 
         # noinspection PyBroadException
         try:
