@@ -76,7 +76,10 @@ class PlayConsumer(AckConsumer):
 
         self.game_args.human = False
         self.game_args.headless = True
+        self.game_args.vnc_host = "localhost"
         self.game_args.vnc_base_port = 5900
+        self.game_args.plot_realtime = False
+        self.game_args.hide_names = False
         self.game_args.show_all = False
 
     @consumer_error(GameException, DockerException)
@@ -124,7 +127,8 @@ class PlayConsumer(AckConsumer):
         logger.info(f"game {game_args.game_name} recorded")
 
     def wait_callback(self):
-        self._connection.process_data_events()
+        # This calls process_data_events under the hood
+        self._connection.sleep(3)
 
 
 def launch_consumer(args: ConsumerConfig):

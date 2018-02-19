@@ -4,6 +4,7 @@ from typing import Sequence, Callable, Any
 import pika
 from pika import ConnectionParameters
 from pika.adapters.blocking_connection import BlockingChannel
+from pika.exceptions import ConnectionClosed
 from pika.spec import Basic, BasicProperties
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,6 @@ class ExampleConsumer(object):
     def connect(self):
         self._connection = pika.BlockingConnection(self._connection_params)
         self._channel = self._connection.channel()
-        self._channel.add_on_close_callback(self.on_channel_closed)
         self._channel.basic_qos(prefetch_count=1)
         self._consumer_tag = self._channel.basic_consume(self.on_message, self.QUEUE)
 
@@ -44,13 +44,9 @@ class ExampleConsumer(object):
         logger.info('Closing connection')
         self._connection.close()
 
-    def on_channel_closed(self, method_frame):
-        logger.warning('Channel was closed: (%s) %s',
-                       method_frame.method.reply_code,
-                       method_frame.method.reply_text)
+    def reconnect(self):
+        logger.info('Reconnecting')
         self.close()
-
-        logger.warning('Trying to reconnect')
         self.connect()
 
 
@@ -62,6 +58,20 @@ class AckConsumer(ExampleConsumer):
                    properties: BasicProperties,
                    body: bytes):
 
+        def reject():
+            try:
+                channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+            except ConnectionClosed:
+                # try to reconnect
+                self.reconnect()
+
+        def accept():
+            try:
+                channel.basic_ack(delivery_tag=method.delivery_tag)
+            except ConnectionClosed:
+                # try to reconnect
+                self.reconnect()
+
         # noinspection PyBroadException
         try:
             # Finally call the handler with payload from RMQ message
@@ -71,14 +81,15 @@ class AckConsumer(ExampleConsumer):
             logger.warning(f"Client sent invalid request raising a ControllerException!\n"
                            f"The message is rejected and sent to dead queue'.",
                            exc_info=True, extra={"data": {"message-body": body.decode("utf-8")}})
-            channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+            reject()
         except Exception as e:
             logger.error(f"Unhandled exception occurred in running server!\n"
                          f"The message is rejected and sent to dead queue'.",
                          exc_info=True, extra={"data": {"message-body": body.decode("utf-8")}})
-            channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+            reject()
         else:
-            channel.basic_ack(delivery_tag=method.delivery_tag)
+            accept()
+
 
     def handle_message(self, msg: str):
         raise NotImplemented
