@@ -4,6 +4,7 @@ from argparse import Namespace
 from copy import copy
 from multiprocessing import Process
 
+from os.path import exists
 from pika import ConnectionParameters
 from pika.credentials import PlainCredentials
 from scbw import DockerException, GameException, run_game, GameArgs
@@ -85,8 +86,12 @@ class PlayConsumer(AckConsumer):
     @consumer_error(GameException, DockerException)
     def handle_message(self, json_request: str):
         self._connection.process_data_events()
-
         play = PlayMessage.deserialize(json_request)
+
+        result_file = f"{self.result_dir}/{play.game_name}.json"
+        if exists(result_file):
+            logger.warning(f"Game {play.game_name} has already been played!")
+            return
 
         game_args = copy(self.game_args)
         game_args.bots = play.bots
@@ -125,7 +130,7 @@ class PlayConsumer(AckConsumer):
                 loser_race=game_result.loser_player.race.value,
             ))
         logger.debug(info)
-        with open(f"{self.result_dir}/{play.game_name}.json", "w") as f:
+        with open(result_file, "w") as f:
             json.dump(info, f)
         logger.info(f"game {game_args.game_name} recorded")
 
