@@ -20,6 +20,7 @@ class ExampleConsumer(object):
         self._connection_params = connection_params
 
     def connect(self):
+        logger.info("Connecting")
         self._connection = pika.BlockingConnection(self._connection_params)
         self._channel = self._connection.channel()
         self._channel.basic_qos(prefetch_count=1)
@@ -60,19 +61,21 @@ class AckConsumer(ExampleConsumer):
 
         def reject():
             try:
-                channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+                self._channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
             except ConnectionClosed:
                 # try to reconnect
                 self.reconnect()
-                channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+                self._channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+                self.start_consuming()
 
         def accept():
             try:
-                channel.basic_ack(delivery_tag=method.delivery_tag)
+                self._channel.basic_ack(delivery_tag=method.delivery_tag)
             except ConnectionClosed:
                 # try to reconnect
                 self.reconnect()
-                channel.basic_ack(delivery_tag=method.delivery_tag)
+                self._channel.basic_ack(delivery_tag=method.delivery_tag)
+                self.start_consuming()
 
         # noinspection PyBroadException
         try:
