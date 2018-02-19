@@ -59,24 +59,6 @@ class AckConsumer(ExampleConsumer):
                    properties: BasicProperties,
                    body: bytes):
 
-        def reject():
-            try:
-                self._channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
-            except ConnectionClosed:
-                # try to reconnect
-                self.reconnect()
-                self._channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
-                self.start_consuming()
-
-        def accept():
-            try:
-                self._channel.basic_ack(delivery_tag=method.delivery_tag)
-            except ConnectionClosed:
-                # try to reconnect
-                self.reconnect()
-                self._channel.basic_ack(delivery_tag=method.delivery_tag)
-                self.start_consuming()
-
         # noinspection PyBroadException
         try:
             # Finally call the handler with payload from RMQ message
@@ -86,14 +68,14 @@ class AckConsumer(ExampleConsumer):
             logger.warning(f"Client sent invalid request raising a ControllerException!\n"
                            f"The message is rejected and sent to dead queue'.",
                            exc_info=True, extra={"data": {"message-body": body.decode("utf-8")}})
-            reject()
+            self._channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
         except Exception as e:
             logger.error(f"Unhandled exception occurred in running server!\n"
                          f"The message is rejected and sent to dead queue'.",
                          exc_info=True, extra={"data": {"message-body": body.decode("utf-8")}})
-            reject()
+            self._channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
         else:
-            accept()
+            self._channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
     def handle_message(self, msg: str):

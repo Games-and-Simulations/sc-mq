@@ -55,7 +55,7 @@ class PlayConsumer(AckConsumer):
             credentials=PlainCredentials(config.user, config.password),
 
             connection_attempts=3,
-            heartbeat_interval=20,
+            heartbeat_interval=60,
         ))
 
         self.result_dir = config.result_dir
@@ -84,6 +84,8 @@ class PlayConsumer(AckConsumer):
 
     @consumer_error(GameException, DockerException)
     def handle_message(self, json_request: str):
+        self._connection.process_data_events()
+
         play = PlayMessage.deserialize(json_request)
 
         game_args = copy(self.game_args)
@@ -101,6 +103,7 @@ class PlayConsumer(AckConsumer):
         )
 
         game_result = run_game(game_args, wait_callback=self.wait_callback)
+        self._connection.process_data_events()
 
         info.update(dict(
             is_crashed=game_result.is_crashed,
@@ -125,6 +128,8 @@ class PlayConsumer(AckConsumer):
         with open(f"{self.result_dir}/{play.game_name}.json", "w") as f:
             json.dump(info, f)
         logger.info(f"game {game_args.game_name} recorded")
+
+        self._connection.process_data_events()
 
     def wait_callback(self):
         # This calls process_data_events under the hood
