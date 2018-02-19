@@ -21,6 +21,7 @@ class ExampleConsumer(object):
     def connect(self):
         self._connection = pika.BlockingConnection(self._connection_params)
         self._channel = self._connection.channel()
+        self._channel.add_on_close_callback(self.on_channel_closed)
         self._channel.basic_qos(prefetch_count=1)
         self._consumer_tag = self._channel.basic_consume(self.on_message, self.QUEUE)
 
@@ -42,6 +43,16 @@ class ExampleConsumer(object):
     def close(self):
         logger.info('Closing connection')
         self._connection.close()
+
+    def on_channel_closed(self, method_frame):
+        logger.warning('Channel was closed: (%s) %s',
+                       method_frame.method.reply_code,
+                       method_frame.method.reply_text)
+        self.close()
+
+        logger.warning('Trying to reconnect')
+        self.connect()
+
 
 
 class AckConsumer(ExampleConsumer):
