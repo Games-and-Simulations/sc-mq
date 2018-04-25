@@ -36,10 +36,7 @@ def process_results(result_dir: str) -> DataFrame:
         R="Random"
     )
 
-    for file in tqdm(glob.glob(f"{result_dir}/*.json"), unit="game"):
-        if "failed" in file:
-            continue
-
+    for file in tqdm(glob.glob(f"{result_dir}/*/result.json"), unit="game"):
         with open(file, "r") as f:
             info = json.load(f)
 

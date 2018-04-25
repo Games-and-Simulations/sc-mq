@@ -1,13 +1,13 @@
-import json
 import logging
 from argparse import Namespace
 from copy import copy
 from multiprocessing import Process
-
 from os.path import exists
+
 from pika import ConnectionParameters
 from pika.credentials import PlainCredentials
-from scbw import DockerException, GameException, run_game, GameArgs
+from scbw.error import DockerException, GameException
+from scbw.game import run_game, GameArgs
 
 from .message import PlayMessage
 from ..rabbitmq_consumer import AckConsumer
@@ -34,11 +34,12 @@ class ConsumerConfig(Namespace):
     game_speed: int
     timeout: int
     bot_dir: str
-    log_dir: str
+    game_dir: str
     map_dir: str
     bwapi_data_bwta_dir: str
     bwapi_data_bwta2_dir: str
     read_overwrite: bool
+    random_names: bool
     docker_image: str
     opt: str
 
@@ -66,12 +67,13 @@ class PlayConsumer(AckConsumer):
         self.game_args.game_speed = config.game_speed
         self.game_args.timeout = config.timeout
         self.game_args.bot_dir = config.bot_dir
-        self.game_args.log_dir = config.log_dir
+        self.game_args.game_dir = config.game_dir
         self.game_args.map_dir = config.map_dir
         self.game_args.bwapi_data_bwta_dir = config.bwapi_data_bwta_dir
         self.game_args.bwapi_data_bwta2_dir = config.bwapi_data_bwta2_dir
         self.game_args.read_overwrite = config.read_overwrite
         self.game_args.docker_image = config.docker_image
+        self.game_args.random_names = config.random_names
 
         self.game_args.opt = config.opt
 
@@ -79,8 +81,11 @@ class PlayConsumer(AckConsumer):
         self.game_args.headless = True
         self.game_args.vnc_host = "localhost"
         self.game_args.vnc_base_port = 5900
+        self.game_args.allow_input = False
+        self.game_args.auto_launch = False
         self.game_args.plot_realtime = False
         self.game_args.hide_names = False
+        self.game_args.capture_movement = False
         self.game_args.show_all = False
 
     @consumer_error(GameException, DockerException)
@@ -98,42 +103,7 @@ class PlayConsumer(AckConsumer):
         game_args.map = play.map
         game_args.game_name = play.game_name
 
-        info = dict(
-            map=game_args.map,
-            game_name=game_args.game_name,
-            game_type=game_args.game_type,
-            timeout=game_args.timeout,
-            read_overwrite=game_args.read_overwrite,
-            bots=play.bots
-        )
-
-        game_result = run_game(game_args, wait_callback=self.wait_callback)
-        self._connection.process_data_events()
-
-        info.update(dict(
-            is_crashed=game_result.is_crashed,
-            is_gametime_outed=game_result.is_gametime_outed,
-            is_realtime_outed=game_result.is_realtime_outed,
-            game_time=game_result.game_time,
-
-            winner=None,
-            loser=None,
-            winner_race=None,
-            loser_race=None,
-        ))
-
-        if game_result.is_valid:
-            info.update(dict(
-                winner=game_result.winner_player.name,
-                loser=game_result.loser_player.name,
-                winner_race=game_result.winner_player.race.value,
-                loser_race=game_result.loser_player.race.value,
-            ))
-        logger.debug(info)
-        with open(result_file, "w") as f:
-            json.dump(info, f)
-        logger.info(f"game {game_args.game_name} recorded")
-
+        run_game(game_args, wait_callback=self.wait_callback)
         self._connection.process_data_events()
 
     def wait_callback(self):

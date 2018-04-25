@@ -31,18 +31,18 @@ class ProducerConfig(Namespace):
 
     bot_dir: str
     map_dir: str
-    result_dir: str
+    game_dir: str
 
 
 def publish_all_vs_all(channel: BlockingChannel, repeat_games: int,
                        bots: Iterable[str], maps: Iterable[str]) -> int:
+
     n = 0
     for _ in range(repeat_games):
         for i, bot_a in enumerate(bots):
             for bot_b in bots[(i + 1):]:
                 for map_name in maps:
-                    game_name = "".join(choice("0123456789ABCDEF")
-                                        for _ in range(8)) + "_%06d" % n
+                    game_name = "%06d" % n
                     msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
                     publish_msg(channel, msg)
 
@@ -87,10 +87,10 @@ def launch_producer(args: ProducerConfig) -> int:
     retrieve_bots(bots, bot_storages)
     for map in maps:
         check_map_exists(args.map_dir + "/" + map)
-    os.makedirs(args.result_dir, exist_ok=True)
+    os.makedirs(args.game_dir, exist_ok=True)
 
-    if len(os.listdir(args.result_dir)) != 0:
-        raise Exception(f"Result dir '{args.result_dir}' is not empty!"
+    if len(os.listdir(args.game_dir)) != 0:
+        raise Exception(f"Result dir '{args.game_dir}' is not empty!"
                         "Please empty the dir or use different result dir as destination.")
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(

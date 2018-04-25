@@ -3,7 +3,7 @@ import logging
 from os.path import abspath, dirname
 
 import coloredlogs
-from scbw.cli import SC_BOT_DIR, SC_LOG_DIR, SC_MAP_DIR, SC_BWAPI_DATA_BWTA_DIR, \
+from scbw.cli import SC_BOT_DIR, SC_GAME_DIR, SC_MAP_DIR, SC_BWAPI_DATA_BWTA_DIR, \
     SC_BWAPI_DATA_BWTA2_DIR, SC_IMAGE, SCBW_BASE_DIR
 from scbw.game_type import GameType
 
@@ -55,8 +55,8 @@ consumer_parser.add_argument("--timeout", type=int, default=600,
 # Volumes
 consumer_parser.add_argument('--bot_dir', type=str, default=SC_BOT_DIR,
                              help=f"Directory where bots are stored, default:\n{SC_BOT_DIR}")
-consumer_parser.add_argument('--log_dir', type=str, default=SC_LOG_DIR,
-                             help=f"Directory where logs are stored, default:\n{SC_LOG_DIR}")
+consumer_parser.add_argument('--game_dir', type=str, default=SC_GAME_DIR,
+                             help=f"Directory where logs are stored, default:\n{SC_GAME_DIR}")
 consumer_parser.add_argument('--map_dir', type=str, default=SC_MAP_DIR,
                              help=f"Directory where maps are stored, default:\n{SC_MAP_DIR}")
 
@@ -74,6 +74,8 @@ consumer_parser.add_argument('--read_overwrite', action="store_true",
                                   "of 'write' directory to the read directory\n"
                                   "of the bot.\n"
                                   "Needs to be explicitly turned on.")
+consumer_parser.add_argument('--random_names', action="store_true",
+                             help="Randomize player names.")
 consumer_parser.add_argument('--docker_image', type=str, default=SC_IMAGE,
                              help="The name of the image that should \n"
                                   "be used to launch the game.\n"
@@ -119,7 +121,7 @@ producer_parser.add_argument('--bot_dir', type=str, default=SC_BOT_DIR,
 producer_parser.add_argument('--map_dir', type=str, default=SC_MAP_DIR,
                              help=f"Directory where maps are stored, default:\n{SC_MAP_DIR}")
 # Results
-producer_parser.add_argument('--result_dir', type=str, default=SC_RESULT_DIR,
+producer_parser.add_argument('--game_dir', type=str, default=SC_RESULT_DIR,
                              help=f"Directory where results are stored, default:\n{SC_RESULT_DIR}")
 
 producer_parser.add_argument('--log_level', type=str, default="INFO",
