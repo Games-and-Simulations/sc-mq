@@ -1,7 +1,7 @@
 import logging
 import os
 from argparse import Namespace
-from random import choice
+from random import choice, shuffle
 from typing import Iterable, Optional
 
 import pika
@@ -9,7 +9,7 @@ from pika import PlainCredentials
 from pika.adapters.blocking_connection import BlockingChannel
 from scbw.bot_factory import retrieve_bots
 from scbw.bot_storage import LocalBotStorage, SscaitBotStorage
-from scbw.map import download_sscait_maps, check_map_exists
+from scbw.map import check_map_exists
 
 from .message import PlayMessage
 from ..utils import read_lines
@@ -37,16 +37,24 @@ class ProducerConfig(Namespace):
 def publish_all_vs_all(channel: BlockingChannel, repeat_games: int,
                        bots: Iterable[str], maps: Iterable[str]) -> int:
 
+    # randomize order of bots playing against each other
+    bot_combinations = []
+    j = 0
+    for i, bot_a in enumerate(bots):
+        for bot_b in bots[(i + 1):]:
+            bot_combinations.append((bot_a, bot_b, j))
+            j += 1
+    shuffle(bot_combinations)
+
     n = 0
     for _ in range(repeat_games):
-        for i, bot_a in enumerate(bots):
-            for bot_b in bots[(i + 1):]:
-                for map_name in maps:
-                    game_name = "%06d" % n
-                    msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
-                    publish_msg(channel, msg)
+        for map_name in maps:
+            for bot_a, bot_b, j in bot_combinations:
+                game_name = "%06d" % (n+j)
+                msg = PlayMessage([bot_a, bot_b], map_name, game_name).serialize()
+                publish_msg(channel, msg)
 
-                    n += 1
+            n += len(bot_combinations)
     return n
 
 

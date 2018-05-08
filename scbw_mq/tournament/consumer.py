@@ -1,4 +1,5 @@
 import logging
+import os
 from argparse import Namespace
 from copy import copy
 from multiprocessing import Process
@@ -10,6 +11,7 @@ from scbw.error import DockerException, GameException
 from scbw.game import run_game, GameArgs
 
 from .message import PlayMessage
+from .producer import publish_msg
 from ..rabbitmq_consumer import AckConsumer
 from ..rabbitmq_consumer import consumer_error
 
@@ -103,12 +105,46 @@ class PlayConsumer(AckConsumer):
         game_args.map = play.map
         game_args.game_name = play.game_name
 
-        run_game(game_args, wait_callback=self.wait_callback)
+        # When read_overwrite is enabled, bots save what they've learned in the game,
+        # thus there cannot be the same bots playing at the same time.
+        # If such a game request happens, it will be appended to the end of the RMQ queue
+        if self.game_args.read_overwrite:
+            if self.bots_playing(game_args.bots):
+                logger.info(f"Cannot play {game_args.bots} now, requeuing {json_request}")
+                self.requeue_game(json_request)
+                return
+
+            try:
+                self.reserve_bots(game_args.bots)
+                run_game(game_args, wait_callback=self.wait_callback)
+            finally:
+                self.free_bots(game_args.bots)
+
+        else:
+            run_game(game_args, wait_callback=self.wait_callback)
+
         self._connection.process_data_events()
 
     def wait_callback(self):
         # This calls process_data_events under the hood
         self._connection.sleep(3)
+
+    def reserve_bots(self, bots) -> None:
+        for bot in bots:
+            fname = f"playing_{bot}"
+            with open(fname, 'a'):
+                os.utime(fname, times=None)
+
+    def free_bots(self, bots) -> None:
+        for bot in bots:
+            fname = f"playing_{bot}"
+            os.remove(fname)
+
+    def bots_playing(self, bots) -> bool:
+        return any(os.path.exists(f"playing_{bot}") for bot in bots)
+
+    def requeue_game(self, json_request: str) -> None:
+        publish_msg(self._channel, json_request)
 
 
 def launch_consumer(args: ConsumerConfig):

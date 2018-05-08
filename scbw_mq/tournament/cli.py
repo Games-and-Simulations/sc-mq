@@ -20,6 +20,7 @@ RABBITMQ_HOST = "localhost"
 RABBITMQ_PORT = 5672
 RABBITMQ_USER = "starcraft"
 RABBITMQ_PASSWORD = "starcraft"
+RABBITMQ_QUEUE = "play"
 
 consumer_parser = argparse.ArgumentParser(
     description='Launch tournament client that uses RabbitMQ specification to launch a game',
