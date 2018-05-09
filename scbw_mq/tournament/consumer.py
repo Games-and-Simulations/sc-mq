@@ -138,7 +138,10 @@ class PlayConsumer(AckConsumer):
     def free_bots(self, bots) -> None:
         for bot in bots:
             fname = f"playing_{bot}"
-            os.remove(fname)
+            try:
+                os.remove(fname)
+            except OSError:
+                pass
 
     def bots_playing(self, bots) -> bool:
         return any(os.path.exists(f"playing_{bot}") for bot in bots)
